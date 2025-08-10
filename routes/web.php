@@ -21,7 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
     Route::post('/todos/{todo}/complete', [TodoController::class, 'complete'])->name('todos.complete');
     Route::get('/todos/{todo}/completions', [TodoController::class, 'getCompletions'])->name('todos.completions');
-
+    Route::get('/todos/ajax', [TodoController::class, 'getTodosAjax'])->name('todos.ajax');
     Route::post('/todos/{todo}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
