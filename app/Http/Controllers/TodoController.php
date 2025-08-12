@@ -34,13 +34,24 @@ class TodoController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $request->user()->todos()->create($request->only('title', 'description'));
+        $todo = $request->user()->todos()->create($request->only('title', 'description'));
 
-        return redirect()->route('home');
+        return response()->json([
+            'success' => true,
+            'message' => 'Todo created successfully',
+            'todo' => $todo->load('user') 
+        ]);
     }
 
     public function update(Request $request, Todo $todo)
     {
+        if (!$todo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Todo not found'
+            ], 404);
+        }
+
         $this->authorizeOwner($todo);
 
         $request->validate([
@@ -50,7 +61,11 @@ class TodoController extends Controller
 
         $todo->update($request->only('title', 'description'));
 
-        return redirect()->route('home');
+        return response()->json([
+            'success' => true,
+            'message' => 'Todo updated successfully',
+            'todo' => $todo->load('user', 'comments.user', 'completions.user') 
+        ]);
     }
 
     public function destroy(Todo $todo)
@@ -61,7 +76,11 @@ class TodoController extends Controller
         $todo->completions()->delete();
         
         $todo->delete();
-        return redirect()->route('home');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Todo deleted successfully'
+        ]);
     }
 
     public function complete(Todo $todo)
@@ -69,13 +88,22 @@ class TodoController extends Controller
         $exists = $todo->completions()->where('user_id', auth()->id())->exists();
         
         if (!$exists) {
-            $todo->completions()->create([
+            $completion = $todo->completions()->create([
                 'user_id' => auth()->id(),
                 'completed_at' => now(),
             ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Todo completed successfully',
+                'completion' => $completion
+            ]);
         }
 
-        return redirect()->route('home');
+        return response()->json([
+            'success' => false,
+            'message' => 'Todo already completed by this user'
+        ], 400);
     }
 
 
@@ -103,5 +131,27 @@ class TodoController extends Controller
         if ($todo->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
+    }
+    
+    public function getTodosAjax(Request $request)
+    {
+        $query = Todo::with(['user', 'comments.user', 'completions.user'])
+                    ->latest();
+
+        if ($request->has('completed')) {
+            $query->whereHas('completions', function($q) {
+                $q->where('user_id', auth()->id()); 
+            });
+        }
+
+        if ($request->has('my_todos')) {
+            $query->where('user_id', auth()->id());
+        }
+
+        $todos = $query->get();
+
+        return response()->json([
+            'todos' => $todos
+        ]);
     }
 }
