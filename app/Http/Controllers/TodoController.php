@@ -39,13 +39,12 @@ class TodoController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Todo created successfully',
-            'todo' => $todo->load('user') // โหลดความสัมพันธ์ user ด้วย
+            'todo' => $todo->load('user') 
         ]);
     }
 
     public function update(Request $request, Todo $todo)
     {
-        // First check if the todo exists
         if (!$todo) {
             return response()->json([
                 'success' => false,
@@ -65,7 +64,7 @@ class TodoController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Todo updated successfully',
-            'todo' => $todo->load('user', 'comments.user', 'completions.user') // Load all relationships
+            'todo' => $todo->load('user', 'comments.user', 'completions.user') 
         ]);
     }
 
@@ -85,28 +84,27 @@ class TodoController extends Controller
     }
 
     public function complete(Todo $todo)
-{
-    // ตรวจสอบว่าผู้ใช้ปัจจุบันยังไม่ได้ทำ Todo นี้
-    $exists = $todo->completions()->where('user_id', auth()->id())->exists();
-    
-    if (!$exists) {
-        $completion = $todo->completions()->create([
-            'user_id' => auth()->id(),
-            'completed_at' => now(),
-        ]);
+    {
+        $exists = $todo->completions()->where('user_id', auth()->id())->exists();
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Todo completed successfully',
-            'completion' => $completion
-        ]);
-    }
+        if (!$exists) {
+            $completion = $todo->completions()->create([
+                'user_id' => auth()->id(),
+                'completed_at' => now(),
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Todo completed successfully',
+                'completion' => $completion
+            ]);
+        }
 
-    return response()->json([
-        'success' => false,
-        'message' => 'Todo already completed by this user'
-    ], 400);
-}
+        return response()->json([
+            'success' => false,
+            'message' => 'Todo already completed by this user'
+        ], 400);
+    }
 
 
     public function getCompletions(Todo $todo)
@@ -142,7 +140,7 @@ class TodoController extends Controller
 
         if ($request->has('completed')) {
             $query->whereHas('completions', function($q) {
-                $q->where('user_id', auth()->id());
+                $q->where('user_id', auth()->id()); 
             });
         }
 

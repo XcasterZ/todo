@@ -39,7 +39,7 @@ class CommentController extends Controller
                     throw new \Exception('Failed to upload file to S3');
                 }
 
-                $imagePath = Storage::disk('s3')->url($s3Path); // เปลี่ยนเป็น URL เต็มรูปแบบ
+                $imagePath = Storage::disk('s3')->url($s3Path); 
             }
 
             $comment = $todo->comments()->create([
@@ -89,7 +89,6 @@ class CommentController extends Controller
 
             if ($request->boolean('remove_image') && $comment->image_path) {
                 \Log::info('Removing image from S3', ['path' => $comment->image_path]);
-                // ลบเฉพาะส่วน path ไม่รวม domain
                 $pathToDelete = str_replace(Storage::disk('s3')->url(''), '', $comment->image_path);
                 Storage::disk('s3')->delete($pathToDelete);
                 $data['image_path'] = null;
@@ -113,7 +112,7 @@ class CommentController extends Controller
                     throw new \Exception('Failed to upload file to S3');
                 }
 
-                $data['image_path'] = Storage::disk('s3')->url($s3Path); // เปลี่ยนเป็น URL เต็มรูปแบบ
+                $data['image_path'] = Storage::disk('s3')->url($s3Path); 
             }
 
             $comment->update($data);

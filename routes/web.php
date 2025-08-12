@@ -15,14 +15,15 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', [TodoController::class, 'index'])->name('home');
+    Route::get('/todos/ajax', [TodoController::class, 'getTodosAjax'])->name('todos.ajax');
     Route::post('/todos', [TodoController::class, 'store'])->name('todos.store');
+    Route::post('/todos/{todo}/complete', [TodoController::class, 'complete'])->name('todos.complete');
     Route::put('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
-    Route::post('/todos/{todo}/complete', [TodoController::class, 'complete'])->name('todos.complete');
     Route::get('/todos/{todo}/completions', [TodoController::class, 'getCompletions'])->name('todos.completions');
-    Route::get('/todos/ajax', [TodoController::class, 'getTodosAjax'])->name('todos.ajax');
     Route::post('/todos/{todo}/comments', [CommentController::class, 'store'])->name('comments.store');
-    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+
+    Route::get('/', [TodoController::class, 'index'])->name('home');
 });

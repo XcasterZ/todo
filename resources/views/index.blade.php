@@ -49,7 +49,6 @@
     </nav>
 
     <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <!-- ฟอร์มสร้าง Todo ใหม่ -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                 <i class="fas fa-plus-circle text-blue-500 mr-2"></i> เพิ่มรายการใหม่
@@ -76,7 +75,6 @@
             </form>
         </div>
 
-        <!-- แท็บต่างๆ -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
             <div class="flex border-b">
                 <button id="incomplete-tab"
@@ -94,13 +92,10 @@
             </div>
         </div>
 
-        <!-- ส่วนแสดง Todo -->
         <div id="todo-container">
-            <!-- เนื้อหาจะถูกโหลดผ่าน AJAX -->
         </div>
     </div>
 
-    <!-- Modal สำหรับแก้ไข Todo -->
     <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
@@ -133,7 +128,6 @@
         </div>
     </div>
 
-    <!-- Modal สำหรับแสดงผู้ที่ทำ Todo เสร็จ -->
     <div id="completion-details-modal"
         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -145,7 +139,6 @@
                     </button>
                 </div>
                 <div id="completion-details-content" class="space-y-3 max-h-80 overflow-y-auto">
-                    <!-- เนื้อหาจะถูกโหลดผ่าน AJAX -->
                 </div>
             </div>
         </div>
@@ -153,12 +146,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // ตัวแปร global สำหรับเก็บสถานะปัจจุบัน
         let currentTab = 'incomplete';
         let currentTodos = [];
         let loadingSwal = null;
 
-        // โหลดข้อมูลเมื่อหน้าเว็บโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', function() {
             loadTodos();
             setupEventListeners();
@@ -181,7 +172,6 @@
             }
         }
 
-        // ฟังก์ชันโหลด Todo
         async function loadTodos() {
             try {
                 showLoading('กำลังโหลดข้อมูล...');
@@ -214,7 +204,6 @@
             }
         }
 
-        // ฟังก์ชันแสดง Todo ในหน้าเว็บ
         function renderTodos(todos) {
             const container = document.getElementById('todo-container');
             container.innerHTML = '';
@@ -235,63 +224,60 @@
             });
         }
 
-        // ฟังก์ชันสร้าง HTML สำหรับแต่ละ Todo
         function createTodoElement(todo) {
-            const isCompleted = todo.completions && todo.completions.length > 0;
+            const isCompletedByCurrentUser = todo.completions &&
+                todo.completions.some(completion => completion.user.id === {{ auth()->id() ?? 0 }});
+
             const isMine = todo.user.id === {{ auth()->id() ?? 0 }};
 
             const todoElement = document.createElement('div');
             todoElement.className =
-                `bg-white rounded-lg shadow-md p-6 mb-6 ${isCompleted ? 'border-l-4 border-green-500' : ''}`;
+                `bg-white rounded-lg shadow-md p-6 mb-6 ${isCompletedByCurrentUser ? 'border-l-4 border-green-500' : ''}`;
             todoElement.dataset.id = todo.id;
 
-            // สร้าง HTML สำหรับส่วนหัวของ Todo
             let todoHeader = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="flex items-center">
-                            <h3 class="text-lg font-semibold text-gray-800">${todo.title}</h3>
-                            ${isCompleted ? '<span class="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">เสร็จแล้ว</span>' : ''}
-                        </div>
-                        ${todo.description ? `<p class="text-gray-600 mt-2">${todo.description}</p>` : ''}
-                        <div class="flex items-center text-sm text-gray-500 mt-3">
-                            <p class="mr-4">สร้างโดย: ${todo.user.username}</p>
-                            <p><i class="far fa-calendar-alt mr-1"></i> ${new Date(todo.created_at).toLocaleString()}</p>
-                            ${todo.completions && todo.completions.length > 0 ? `
-                                                                                                                                                                                    <button onclick="showCompletionDetails(${todo.id})" class="text-blue-500 text-sm hover:underline flex items-center ml-4">
-                                                                                                                                                                                        <i class="fas fa-users mr-1"></i> ผู้ที่เสร็จสิ้นรายการ
-                                                                                                                                                                                    </button>
-                                                                                                                                                                                ` : ''}
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-            `;
+        <div class="flex justify-between items-start">
+            <div>
+                <div class="flex items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">${todo.title}</h3>
+                    ${isCompletedByCurrentUser ? '<span class="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">เสร็จแล้ว</span>' : ''}
+                </div>
+                ${todo.description ? `<p class="text-gray-600 mt-2">${todo.description}</p>` : ''}
+                <div class="flex items-center text-sm text-gray-500 mt-3">
+                    <p class="mr-4">สร้างโดย: ${todo.user.username}</p>
+                    <p><i class="far fa-calendar-alt mr-1"></i> ${new Date(todo.created_at).toLocaleString()}</p>
+                    ${todo.completions && todo.completions.length > 0 ? `
+                            <button onclick="showCompletionDetails(${todo.id})" class="text-blue-500 text-sm hover:underline flex items-center ml-4">
+                                <i class="fas fa-users mr-1"></i> ผู้ที่เสร็จสิ้นรายการ (${todo.completions.length})
+                            </button>
+                        ` : ''}
+                </div>
+            </div>
+            <div class="flex space-x-2">
+    `;
 
-            // ปุ่มสำหรับผู้สร้าง Todo
             if (isMine) {
                 todoHeader += `
-                    <button onclick="deleteTodo(${todo.id})" class="p-2 text-red-500 hover:text-red-700">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button onclick="openEditModal(${todo.id}, '${escapeHtml(todo.title)}', '${escapeHtml(todo.description || '')}')" 
-                        class="p-2 text-blue-500 hover:text-blue-700">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                `;
+            <button onclick="deleteTodo(${todo.id})" class="p-2 text-red-500 hover:text-red-700">
+                <i class="fas fa-trash"></i>
+            </button>
+            <button onclick="openEditModal(${todo.id}, '${escapeHtml(todo.title)}', '${escapeHtml(todo.description || '')}')" 
+                class="p-2 text-blue-500 hover:text-blue-700">
+                <i class="fas fa-edit"></i>
+            </button>
+        `;
             }
 
-            // ปุ่มทำ Todo เสร็จ
-            if (!isCompleted) {
+            if (!isCompletedByCurrentUser) {
                 todoHeader += `
-                    <button onclick="completeTodo(${todo.id})" class="p-2 text-green-500 hover:text-green-700">
-                        <i class="fas fa-check"></i>
-                    </button>
-                `;
+            <button onclick="completeTodo(${todo.id})" class="p-2 text-green-500 hover:text-green-700">
+                <i class="fas fa-check"></i>
+            </button>
+        `;
             }
 
             todoHeader += `</div></div>`;
 
-            // สร้าง HTML สำหรับความคิดเห็น
             let commentsHtml = `
                 <div class="mt-6 border-t pt-4">
                     <h4 class="text-md font-medium text-gray-700 mb-3">ความคิดเห็น</h4>
@@ -309,24 +295,24 @@
                                     <p class="text-sm font-medium text-gray-700">${comment.user.username}</p>
                                     <p class="text-gray-600 mt-1">${comment.content || ''}</p>
             ${comment.image_path ? `
-                                                                                                                            <img src="${comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
-                                                                                                                        ` : ''}
+                                                                                                                                <img src="${comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
+                                                                                                                            ` : ''}
                                     <p class="text-xs text-gray-500 mt-1">
                                         ${new Date(comment.created_at).toLocaleString()}
                                     </p>
                                 </div>
                                 ${isCommentMine ? `
-                                                                                                                                                                                        <div class="flex space-x-2">
-                                                                                                                                                                                            <button onclick="openEditCommentModal(${comment.id}, '${escapeHtml(comment.content || '')}', '${comment.image_path || ''}')" 
-                                                                                                                                                                                                class="text-blue-500 hover:text-blue-700 text-sm">
-                                                                                                                                                                                                <i class="fas fa-edit"></i>
-                                                                                                                                                                                            </button>
-                                                                                                                                                                                            <button onclick="deleteComment(${comment.id})" 
-                                                                                                                                                                                                class="text-red-500 hover:text-red-700 text-sm">
-                                                                                                                                                                                                <i class="fas fa-trash"></i>
-                                                                                                                                                                                            </button>
-                                                                                                                                                                                        </div>
-                                                                                                                                                                                    ` : ''}
+                                                                                                                                                                                            <div class="flex space-x-2">
+                                                                                                                                                                                                <button onclick="openEditCommentModal(${comment.id}, '${escapeHtml(comment.content || '')}', '${comment.image_path || ''}')" 
+                                                                                                                                                                                                    class="text-blue-500 hover:text-blue-700 text-sm">
+                                                                                                                                                                                                    <i class="fas fa-edit"></i>
+                                                                                                                                                                                                </button>
+                                                                                                                                                                                                <button onclick="deleteComment(${comment.id})" 
+                                                                                                                                                                                                    class="text-red-500 hover:text-red-700 text-sm">
+                                                                                                                                                                                                    <i class="fas fa-trash"></i>
+                                                                                                                                                                                                </button>
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                        ` : ''}
                             </div>
                         </div>
                     `;
@@ -335,7 +321,6 @@
 
             commentsHtml += `</div>`;
 
-            // ฟอร์มเพิ่มความคิดเห็น
             commentsHtml += `
                 <form onsubmit="addComment(event, ${todo.id})" class="mt-4" enctype="multipart/form-data">
           <div class="flex space-x-2">
@@ -366,9 +351,7 @@
             return todoElement;
         }
 
-        // ตั้งค่าตัวจัดการเหตุการณ์
         function setupEventListeners() {
-            // การคลิกแท็บ
             document.getElementById('incomplete-tab').addEventListener('click', () => {
                 currentTab = 'incomplete';
                 setActiveTab('incomplete-tab');
@@ -387,13 +370,10 @@
                 loadTodos();
             });
 
-            // ฟอร์มสร้าง Todo
             document.getElementById('create-todo-form').addEventListener('submit', createTodo);
 
-            // ฟอร์มแก้ไข Todo
             document.getElementById('edit-todo-form').addEventListener('submit', updateTodo);
 
-            // การล็อกเอาท์
             document.getElementById('logout-form')?.addEventListener('submit', function(e) {
                 e.preventDefault();
                 this.submit();
@@ -423,7 +403,6 @@
                     throw new Error(data.message || 'Failed to create todo');
                 }
 
-                // เพิ่ม Todo ใหม่เข้าไปใน DOM
                 if (currentTab === 'incomplete' || currentTab === 'my-todos') {
                     const newTodoElement = createTodoElement(data.todo);
                     document.getElementById('todo-container').prepend(newTodoElement);
@@ -474,7 +453,6 @@
                     showConfirmButton: false
                 });
 
-                // โหลด Todo ใหม่หลังจากอัพเดตสถานะ
                 loadTodos();
             } catch (error) {
                 console.error('Error completing todo:', error);
@@ -484,7 +462,6 @@
             }
         }
 
-        // ฟังก์ชันลบ Todo
         async function deleteTodo(todoId) {
             try {
                 const result = await Swal.fire({
@@ -517,7 +494,6 @@
                     throw new Error(data.message || 'Failed to delete');
                 }
 
-                // ลบ Todo ออกจาก DOM โดยตรง
                 const todoElement = document.querySelector(`div[data-id="${todoId}"]`);
                 if (todoElement) {
                     todoElement.remove();
@@ -538,7 +514,6 @@
             }
         }
 
-        // ฟังก์ชันเปิด Modal แก้ไข Todo
         function openEditModal(id, title, description) {
             document.getElementById('edit-todo-id').value = id;
             document.getElementById('edit-title').value = title;
@@ -546,12 +521,10 @@
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
-        // ฟังก์ชันปิด Modal แก้ไข Todo
         function closeEditModal() {
             document.getElementById('edit-modal').classList.add('hidden');
         }
 
-        // ฟังก์ชันอัพเดต Todo
         async function updateTodo(e) {
             e.preventDefault();
             showLoading('กำลังอัพเดตรายการ...');
@@ -577,14 +550,11 @@
                     throw new Error(data.message || 'Failed to update todo');
                 }
 
-                // Find the index of the updated todo in currentTodos
                 const todoIndex = currentTodos.findIndex(todo => todo.id == todoId);
                 if (todoIndex !== -1) {
-                    // Update the todo in our currentTodos array
                     currentTodos[todoIndex] = data.todo;
                 }
 
-                // Re-render the todos
                 renderTodos(currentTodos);
                 closeEditModal();
 
@@ -599,7 +569,6 @@
                 console.error('Error updating todo:', error);
                 Swal.fire('ผิดพลาด', error.message || 'ไม่สามารถอัพเดตรายการ Todo ได้', 'error');
 
-                // If the error is because the todo wasn't found, reload the todos
                 if (error.message.includes('not found')) {
                     loadTodos();
                 }
@@ -636,7 +605,6 @@
                 previewContainer.classList.add('hidden');
                 document.getElementById(`comment-image-upload-${todoId}`).value = '';
 
-                // เพิ่มความคิดเห็นใหม่เข้าไปใน DOM
                 const commentsContainer = document.getElementById(`comments-${todoId}`);
                 const newComment = document.createElement('div');
                 newComment.className = 'bg-gray-50 rounded p-4 mb-3';
@@ -647,8 +615,8 @@
                         <p class="text-sm font-medium text-gray-700">${data.comment.user.username}</p>
                         <p class="text-gray-600 mt-1">${data.comment.content || ''}</p>
                         ${data.comment.image_path ? `
-                                                                        <img src="${data.comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
-                                                                    ` : ''}
+                                                                            <img src="${data.comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
+                                                                        ` : ''}
                         <p class="text-xs text-gray-500 mt-1">
                             ${new Date(data.comment.created_at).toLocaleString()}
                         </p>
@@ -684,7 +652,6 @@
             }
         }
 
-        // ฟังก์ชันลบความคิดเห็น
         async function deleteComment(commentId) {
             try {
                 const result = await Swal.fire({
@@ -718,7 +685,6 @@
                     throw new Error(data.message || 'Failed to delete comment');
                 }
 
-                // ลบความคิดเห็นออกจาก DOM
                 document.querySelector(`[data-comment-id="${commentId}"]`).remove();
 
                 Swal.fire({
@@ -737,7 +703,6 @@
         }
 
         function openEditCommentModal(commentId, content, imagePath = null) {
-            // สร้าง HTML สำหรับ modal
             const imageUrl = imagePath ? `${imagePath}?${new Date().getTime()}` : null;
 
             const html = `
@@ -750,8 +715,8 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">รูปภาพ</label>
                 ${imagePath ? `
-                        
-                    ` : ''}
+                            
+                        ` : ''}
                 
                 <label class="cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-md p-2 inline-block">
                     <i class="fas fa-image text-gray-600 mr-2"></i>เปลี่ยนรูปภาพ
@@ -775,7 +740,6 @@
                 cancelButtonText: 'ยกเลิก',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
-                    // ใช้วิธีนี้เพื่อเข้าถึง element ภายใน modal
                     const modal = Swal.getPopup();
                     const contentElement = modal.querySelector('#edit-comment-content');
 
@@ -788,13 +752,11 @@
                     formData.append('content', contentElement.value);
                     formData.append('_method', 'PUT');
 
-                    // ตรวจสอบว่าต้องการลบรูปภาพเดิมหรือไม่
                     const removeImageCheckbox = modal.querySelector('#remove-image-checkbox');
                     if (imagePath && removeImageCheckbox?.checked) {
                         formData.append('remove_image', 'true');
                     }
 
-                    // ตรวจสอบว่ามีการอัพโหลดรูปภาพใหม่หรือไม่
                     const imageInput = modal.querySelector('#edit-comment-image');
                     if (imageInput?.files && imageInput.files[0]) {
                         formData.append('image', imageInput.files[0]);
@@ -806,6 +768,7 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'X-Requested-With': 'XMLHttpRequest',
                                 'Accept': 'application/json',
+                                'X-HTTP-Method-Override': 'PUT'
                             },
                             body: formData
                         })
@@ -822,7 +785,7 @@
                 },
                 allowOutsideClick: () => !Swal.isLoading(),
                 didOpen: () => {
-                    // ตั้งค่าการแสดงตัวอย่างรูปภาพเมื่อเลือกไฟล์ใหม่
+                    
                     const modal = Swal.getPopup();
                     const imageInput = modal.querySelector('#edit-comment-image');
                     if (imageInput) {
@@ -845,22 +808,18 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
-                    // อัพเดตเนื้อหาความคิดเห็นใน DOM
                     const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
                     if (commentElement) {
-                        // อัพเดตเนื้อหา
                         const contentElement = commentElement.querySelector('.text-gray-600');
                         if (contentElement) {
                             contentElement.textContent = result.value.comment.content;
                         }
 
-                        // อัพเดตรูปภาพ (ถ้ามี)
                         const imgElement = commentElement.querySelector('img');
                         if (result.value.comment.image_path) {
                             if (imgElement) {
                                 imgElement.src = result.value.comment.image_path;
                             } else {
-                                // สร้าง element รูปภาพใหม่ถ้าไม่มีอยู่แต่ตอนนี้มี
                                 const contentContainer = commentElement.querySelector('div > div:first-child');
                                 if (contentContainer) {
                                     const newImg = document.createElement('img');
@@ -871,7 +830,6 @@
                                 }
                             }
                         } else if (imgElement) {
-                            // ลบรูปภาพถ้าไม่มีแล้ว
                             imgElement.remove();
                         }
                     }
@@ -914,7 +872,6 @@
             });
         }
 
-        // ฟังก์ชันแสดงรายละเอียดการทำ Todo เสร็จ
         async function showCompletionDetails(todoId) {
             try {
                 const response = await fetch(`/todos/${todoId}/completions`, {
@@ -954,12 +911,10 @@
             }
         }
 
-        // ฟังก์ชันปิด Modal รายละเอียดการทำ Todo เสร็จ
         function closeCompletionDetailsModal() {
             document.getElementById('completion-details-modal').classList.add('hidden');
         }
 
-        // ฟังก์ชันแสดงตัวอย่างรูปภาพ
         function previewImage(event, todoId) {
             const input = event.target;
             const previewContainer = document.getElementById(`image-preview-container-${todoId}`);
@@ -987,7 +942,6 @@
             previewContainer.classList.add('hidden');
         }
 
-        // ฟังก์ชันตั้งค่าแท็บที่ active
         function setActiveTab(tabId) {
             document.querySelectorAll('[id$="-tab"]').forEach(tab => {
                 tab.classList.remove('border-b-2', 'border-blue-500');
@@ -995,7 +949,6 @@
             document.getElementById(tabId).classList.add('border-b-2', 'border-blue-500');
         }
 
-        // ฟังก์ชันช่วยเหลือ: หลีกเลี่ยง HTML ในสตริง
         function escapeHtml(unsafe) {
             return unsafe
                 .replace(/&/g, "&amp;")
