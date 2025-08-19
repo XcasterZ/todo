@@ -230,13 +230,22 @@
 
             const isMine = todo.user.id === {{ auth()->id() ?? 0 }};
 
+            if (currentTab === 'completed' && !isCompletedByCurrentUser) {
+                return null;
+            }
+
+            // ถ้าเป็นแท็บ "รายการที่ยังไม่ได้ทำ" และ Todo นี้เสร็จแล้ว ให้ไม่แสดง
+            if (currentTab === 'incomplete' && isCompletedByCurrentUser) {
+                return null;
+            }
+
             const todoElement = document.createElement('div');
             todoElement.className =
                 `bg-white rounded-lg shadow-md p-6 mb-6 ${isCompletedByCurrentUser ? 'border-l-4 border-green-500' : ''}`;
             todoElement.dataset.id = todo.id;
 
             let todoHeader = `
-        <div class="flex justify-between items-start">
+         <div class="flex justify-between items-start">
             <div>
                 <div class="flex items-center">
                     <h3 class="text-lg font-semibold text-gray-800">${todo.title}</h3>
@@ -247,14 +256,14 @@
                     <p class="mr-4">สร้างโดย: ${todo.user.username}</p>
                     <p><i class="far fa-calendar-alt mr-1"></i> ${new Date(todo.created_at).toLocaleString()}</p>
                     ${todo.completions && todo.completions.length > 0 ? `
-                            <button onclick="showCompletionDetails(${todo.id})" class="text-blue-500 text-sm hover:underline flex items-center ml-4">
-                                <i class="fas fa-users mr-1"></i> ผู้ที่เสร็จสิ้นรายการ (${todo.completions.length})
-                            </button>
-                        ` : ''}
+                                        <button onclick="showCompletionDetails(${todo.id})" class="text-blue-500 text-sm hover:underline flex items-center ml-4">
+                                            <i class="fas fa-users mr-1"></i> ผู้ที่เสร็จสิ้นรายการ (${todo.completions.length})
+                                        </button>
+                                    ` : ''}
                 </div>
             </div>
             <div class="flex space-x-2">
-    `;
+           `;
 
             if (isMine) {
                 todoHeader += `
@@ -265,7 +274,7 @@
                 class="p-2 text-blue-500 hover:text-blue-700">
                 <i class="fas fa-edit"></i>
             </button>
-        `;
+            `;
             }
 
             if (!isCompletedByCurrentUser) {
@@ -273,7 +282,7 @@
             <button onclick="completeTodo(${todo.id})" class="p-2 text-green-500 hover:text-green-700">
                 <i class="fas fa-check"></i>
             </button>
-        `;
+            `;
             }
 
             todoHeader += `</div></div>`;
@@ -295,24 +304,24 @@
                                     <p class="text-sm font-medium text-gray-700">${comment.user.username}</p>
                                     <p class="text-gray-600 mt-1">${comment.content || ''}</p>
             ${comment.image_path ? `
-                                                                                                                                <img src="${comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
-                                                                                                                            ` : ''}
+                                                                                                                                            <img src="${comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
+                                                                                                                                        ` : ''}
                                     <p class="text-xs text-gray-500 mt-1">
                                         ${new Date(comment.created_at).toLocaleString()}
                                     </p>
                                 </div>
                                 ${isCommentMine ? `
-                                                                                                                                                                                            <div class="flex space-x-2">
-                                                                                                                                                                                                <button onclick="openEditCommentModal(${comment.id}, '${escapeHtml(comment.content || '')}', '${comment.image_path || ''}')" 
-                                                                                                                                                                                                    class="text-blue-500 hover:text-blue-700 text-sm">
-                                                                                                                                                                                                    <i class="fas fa-edit"></i>
-                                                                                                                                                                                                </button>
-                                                                                                                                                                                                <button onclick="deleteComment(${comment.id})" 
-                                                                                                                                                                                                    class="text-red-500 hover:text-red-700 text-sm">
-                                                                                                                                                                                                    <i class="fas fa-trash"></i>
-                                                                                                                                                                                                </button>
-                                                                                                                                                                                            </div>
-                                                                                                                                                                                        ` : ''}
+                                                                                                                                                                                                        <div class="flex space-x-2">
+                                                                                                                                                                                                            <button onclick="openEditCommentModal(${comment.id}, '${escapeHtml(comment.content || '')}', '${comment.image_path || ''}')" 
+                                                                                                                                                                                                                class="text-blue-500 hover:text-blue-700 text-sm">
+                                                                                                                                                                                                                <i class="fas fa-edit"></i>
+                                                                                                                                                                                                            </button>
+                                                                                                                                                                                                            <button onclick="deleteComment(${comment.id})" 
+                                                                                                                                                                                                                class="text-red-500 hover:text-red-700 text-sm">
+                                                                                                                                                                                                                <i class="fas fa-trash"></i>
+                                                                                                                                                                                                            </button>
+                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                    ` : ''}
                             </div>
                         </div>
                     `;
@@ -453,6 +462,7 @@
                     showConfirmButton: false
                 });
 
+                // โหลดข้อมูลใหม่ตามแท็บปัจจุบัน
                 loadTodos();
             } catch (error) {
                 console.error('Error completing todo:', error);
@@ -615,8 +625,8 @@
                         <p class="text-sm font-medium text-gray-700">${data.comment.user.username}</p>
                         <p class="text-gray-600 mt-1">${data.comment.content || ''}</p>
                         ${data.comment.image_path ? `
-                                                                            <img src="${data.comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
-                                                                        ` : ''}
+                                                                                        <img src="${data.comment.image_path}" alt="Comment image" class="mt-2 rounded max-w-xs">
+                                                                                    ` : ''}
                         <p class="text-xs text-gray-500 mt-1">
                             ${new Date(data.comment.created_at).toLocaleString()}
                         </p>
@@ -715,8 +725,8 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">รูปภาพ</label>
                 ${imagePath ? `
-                            
-                        ` : ''}
+                                        
+                                    ` : ''}
                 
                 <label class="cursor-pointer bg-gray-200 hover:bg-gray-300 rounded-md p-2 inline-block">
                     <i class="fas fa-image text-gray-600 mr-2"></i>เปลี่ยนรูปภาพ
@@ -785,7 +795,7 @@
                 },
                 allowOutsideClick: () => !Swal.isLoading(),
                 didOpen: () => {
-                    
+
                     const modal = Swal.getPopup();
                     const imageInput = modal.querySelector('#edit-comment-image');
                     if (imageInput) {
