@@ -137,19 +137,22 @@ class TodoController extends Controller
     {
         $query = Todo::with(['user', 'comments.user', 'completions.user'])
                     ->latest();
-
+    
         if ($request->has('completed')) {
             $query->whereHas('completions', function($q) {
                 $q->where('user_id', auth()->id()); 
             });
-        }
-
-        if ($request->has('my_todos')) {
+        } elseif ($request->has('my_todos')) {
             $query->where('user_id', auth()->id());
+        } else {
+            // สำหรับรายการที่ยังไม่ได้ทำ
+            $query->whereDoesntHave('completions', function($q) {
+                $q->where('user_id', auth()->id());
+            });
         }
-
+    
         $todos = $query->get();
-
+    
         return response()->json([
             'todos' => $todos
         ]);
